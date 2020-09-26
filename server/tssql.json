@@ -1,0 +1,14 @@
+{
+  "client": "postgres",
+  "connection": {
+    "host": "127.0.0.1",
+    "user": "api",
+    "password": "32&b5J!Z&aze",
+    "database": "nohouse"
+  },
+  "excludedTables": ["public.knex_migrations", "public.knex_migrations_lock"],
+  "filename": "./src/generated/database",
+  "interfaceNameFormat": "${table}Row",
+  "tableNameCasing": "pascal",
+  "template": "./tssql.handlebars"
+}

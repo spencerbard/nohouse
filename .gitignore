@@ -1,0 +1,4 @@
+**/node_modules
+server/secrets.js
+docker/postgres-data
+**/secrets.ts
