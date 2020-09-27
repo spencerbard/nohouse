@@ -1,6 +1,6 @@
 exports.up = async (knex) => {
   await knex.raw(`
-    CREATE MATERIALIZED VIEW odds_current
+    CREATE VIEW odds_current
     AS
     SELECT o.*
     FROM odds_history o
@@ -17,5 +17,5 @@ exports.up = async (knex) => {
 };
 
 exports.down = async (knex) => {
-  await knex.raw(`DROP MATERIALIZED VIEW odds_current`);
+  await knex.raw(`DROP VIEW odds_current`);
 };

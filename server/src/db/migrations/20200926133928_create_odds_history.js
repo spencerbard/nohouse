@@ -11,8 +11,9 @@ exports.up = async (knex) => {
     table.jsonb("sites").notNullable();
     table.integer("sites_count").notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.raw("NOW()"));
+    table.uuid("load_uid").notNullable();
     table.enum("market", ["h2h", "spreads", "totals"]).notNullable();
-    table.unique(["event_key", "market", "created_at"]);
+    table.unique(["event_key", "load_uid", "market"]);
   });
 };
 

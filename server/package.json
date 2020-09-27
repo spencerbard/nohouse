@@ -7,9 +7,7 @@
   "scripts": {
     "start:dev": "npm run build:dev",
     "build:dev": "nodemon 'src/api/index.ts' --exec 'ts-node' --inspect src/api/index.ts -e ts,graphql",
-    "knex:down": "cd src/db && npx knex migrate:down && cd ../..",
-    "knex:latest": "cd src/db && npx knex migrate:latest && cd ../..",
-    "knex:up": "cd src/db && npx knex migrate:up && cd ../..",
+    "knex": "npx knex --cwd src/db",
     "debug:dev": "nodemon src/api/index.ts",
     "ts-db": "npx @rmp135/sql-ts -c ./tssql.json && copyfiles -f ./src/generated/database.ts ../client/src/generated",
     "ts-graphql": "graphql-codegen --config tsgraphql.yml && copyfiles -f ./src/generated/graphql.ts ../client/src/generated"
@@ -23,6 +21,7 @@
     "bcrypt": "^5.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "dayjs": "^1.8.36",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
