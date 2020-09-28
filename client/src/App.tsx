@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <Layout style={{ height: "100%" }}>
-        <Layout.Content>
+        <Layout.Content style={{ backgroundColor: "white" }}>
           <Switch>
             <Route exact path="/signup" component={UserSignup} />
             <Route exact path="/login" component={UserLogin} />

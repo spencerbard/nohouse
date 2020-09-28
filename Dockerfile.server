@@ -1,0 +1,8 @@
+FROM node:14.11.0
+WORKDIR /server
+COPY ./server/package.json /server
+RUN npm install
+COPY ./server/tsconfig.json /server
+COPY ./server/src /server/src
+RUN npm run build
+CMD node dist/api/index.js

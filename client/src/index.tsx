@@ -12,18 +12,24 @@ import {
   InMemoryCache,
   createHttpLink,
 } from "@apollo/client";
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://nohouse-server.herokuapp.com/graphql"
+    : "http://localhost:4000/graphql";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:4000/graphql",
+  uri: API_URL,
 });
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors)
+  if (graphQLErrors) {
+    console.log(graphQLErrors);
     graphQLErrors.map(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     );
+  }
 
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
@@ -36,6 +42,7 @@ const authLink = setContext((_, { headers }) => {
     headers: {
       ...headers,
       authorization: token ? `Bearer ${token}` : "",
+      tzoffset: new Date().getTimezoneOffset(),
     },
   };
 });

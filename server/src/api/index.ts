@@ -1,23 +1,45 @@
-import { ApolloServer, gql, UserInputError } from "apollo-server-express";
 import cors from "cors";
 import express from "express";
-import { GraphQLSchema } from "graphql";
+import { GraphQLScalarType, GraphQLSchema, Kind } from "graphql";
 import depthLimit from "graphql-depth-limit";
-import "graphql-import-node";
 import { IResolvers, makeExecutableSchema } from "graphql-tools";
 import { createServer } from "http";
 import * as OddsModel from "../models/odds";
 import * as UserModel from "../models/users";
 import {
+  ApolloServer,
+  gql,
+  UserInputError,
+  AuthenticationError,
+} from "apollo-server-express";
+import {
   CurrentUser,
   User,
   UserLoginInput,
   UserSignupInput,
+  Line,
   Sport,
 } from "../generated/graphql";
 
+const customFloat = new GraphQLScalarType({
+  name: "CustomFloat",
+  description: "Handles Postgres NaN",
+  serialize(value) {
+    return isNaN(value) ? null : value;
+  },
+  parseValue(value) {
+    return value == null ? NaN : value;
+  },
+  parseLiteral(ast) {
+    return Kind.FLOAT;
+  },
+});
+
 const typeDefs = gql`
+  scalar CustomFloat
+
   type Query {
+    lines: [Line]
     odds(sport: String!): String
     sports: [Sport]
   }
@@ -26,6 +48,27 @@ const typeDefs = gql`
     userSignup(userSignupInput: UserSignupInput!): CurrentUser
     userLogin(userLoginInput: UserLoginInput!): CurrentUser
     userLoginToken(token: String!): CurrentUser
+  }
+
+  type Line {
+    uid: String!
+    event_key: String!
+    sport_key: String!
+    home_team: String!
+    away_team: String!
+    event_start_time: String!
+    h2h_home: CustomFloat
+    h2h_away: CustomFloat
+    h2h_draw: CustomFloat
+    spread_home: CustomFloat
+    spread_away: CustomFloat
+    spread_home_vig: CustomFloat
+    spread_away_vig: CustomFloat
+    total: CustomFloat
+    total_over_vig: CustomFloat
+    total_under_vig: CustomFloat
+    load_uid: String!
+    created_at: String!
   }
 
   type Sport {
@@ -64,10 +107,14 @@ const typeDefs = gql`
 `;
 
 const resolvers: IResolvers = {
+  CustomFloat: customFloat,
   Query: {
     odds: () => "gotem",
     sports: async (): Promise<Sport[]> => {
       return await OddsModel.getSports();
+    },
+    lines: async (): Promise<Line[]> => {
+      return await OddsModel.getLines();
     },
   },
   Mutation: {
@@ -91,7 +138,10 @@ const resolvers: IResolvers = {
       };
     },
     userLoginToken: function (_, { token }: { token: string }): CurrentUser {
-      const user: User = UserModel.decodeToken(token);
+      const user: User | null = UserModel.decodeToken(token);
+      if (!user) {
+        throw new AuthenticationError("Token is invalid.");
+      }
       return { uid: user.uid, name: user.name, email: user.email, token };
     },
     userSignup: async function (
@@ -126,21 +176,22 @@ const server = new ApolloServer({
   context: async ({ req }) => {
     // Get the user token from the headers.
     const token = req.headers.authorization;
-
     // try to retrieve a user with the token
     const user = token
       ? await UserModel.getByToken(token.replace("Bearer ", ""))
       : null;
 
     // add the user to the context
-    return { user };
+    return { user, tzoffset: req.headers.tzoffset };
   },
+  introspection: true,
 });
 app.use("*", cors());
 server.applyMiddleware({ app, path: "/graphql" });
 const httpServer = createServer(app);
-httpServer.listen({ port: 4000 }, (): void =>
+const port = process.env.PORT || 4000;
+httpServer.listen({ port }, (): void =>
   console.log(
-    `\n🚀      GraphQL is now running on http://localhost:4000/graphql`
+    `\n🚀      GraphQL is now running on http://localhost:${port}/graphql`
   )
 );

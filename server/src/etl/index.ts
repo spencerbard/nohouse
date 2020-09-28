@@ -68,11 +68,6 @@ enum EMarket {
   totals = "totals",
 }
 
-enum EDateFormat {
-  unix = "unix",
-  iso = "iso",
-}
-
 type EventOdds = { [key in EMarket]: OddsHistoryRowRead };
 
 async function makeRequest({
@@ -307,7 +302,6 @@ async function writeLinesHistoryToDB() {
       load_uid: eventOddsBase.load_uid,
     });
   }
-  console.log(linesRows);
   const lineRowsRead = await knex("lines_history").insert(linesRows, "*");
   return lineRowsRead;
 }
@@ -332,7 +326,6 @@ function writeLines() {
 
 function main() {
   const func = process.argv[2];
-  console.log(func);
   switch (func) {
     case "sports":
       return writeSports();
@@ -340,6 +333,17 @@ function main() {
       return writeOdds();
     case "lines":
       return writeLines();
+    case "odds&lines":
+      return writeOddsHistoryToDB()
+        .then((rows) => {
+          console.log(`Added ${rows.length} rows to odds_history`);
+          writeLinesHistoryToDB()
+            .then((lines) => {
+              console.log(`Added ${lines.length} rows to lines_history`);
+            })
+            .finally(process.exit);
+        })
+        .catch(process.exit);
     default:
       console.log("invalid cmd");
   }

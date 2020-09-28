@@ -7,12 +7,21 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  /** Handles Postgres NaN */
+  CustomFloat: any;
 };
+
 
 export type Query = {
   __typename?: 'Query';
+  lines?: Maybe<Array<Maybe<Line>>>;
   odds?: Maybe<Scalars['String']>;
   sports?: Maybe<Array<Maybe<Sport>>>;
+};
+
+
+export type QueryOddsArgs = {
+  sport: Scalars['String'];
 };
 
 export type Mutation = {
@@ -35,6 +44,28 @@ export type MutationUserLoginArgs = {
 
 export type MutationUserLoginTokenArgs = {
   token: Scalars['String'];
+};
+
+export type Line = {
+  __typename?: 'Line';
+  uid: Scalars['String'];
+  event_key: Scalars['String'];
+  sport_key: Scalars['String'];
+  home_team: Scalars['String'];
+  away_team: Scalars['String'];
+  event_start_time: Scalars['String'];
+  h2h_home?: Maybe<Scalars['CustomFloat']>;
+  h2h_away?: Maybe<Scalars['CustomFloat']>;
+  h2h_draw?: Maybe<Scalars['CustomFloat']>;
+  spread_home?: Maybe<Scalars['CustomFloat']>;
+  spread_away?: Maybe<Scalars['CustomFloat']>;
+  spread_home_vig?: Maybe<Scalars['CustomFloat']>;
+  spread_away_vig?: Maybe<Scalars['CustomFloat']>;
+  total?: Maybe<Scalars['CustomFloat']>;
+  total_over_vig?: Maybe<Scalars['CustomFloat']>;
+  total_under_vig?: Maybe<Scalars['CustomFloat']>;
+  load_uid: Scalars['String'];
+  created_at: Scalars['String'];
 };
 
 export type Sport = {

@@ -2,3 +2,5 @@
 server/secrets.js
 docker/postgres-data
 **/secrets.ts
+.env
+**/dist

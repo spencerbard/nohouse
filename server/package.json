@@ -1,12 +1,13 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "This is the server for nohouse",
+  "description": "This is the server for nohouse.",
   "main": "src/api/index.ts",
   "repository": "coming soon",
   "scripts": {
     "start:dev": "npm run build:dev",
     "build:dev": "nodemon 'src/api/index.ts' --exec 'ts-node' --inspect src/api/index.ts -e ts,graphql",
+    "build": "tsc",
     "knex": "npx knex --cwd src/db",
     "debug:dev": "nodemon src/api/index.ts",
     "ts-db": "npx @rmp135/sql-ts -c ./tssql.json && copyfiles -f ./src/generated/database.ts ../client/src/generated",
@@ -47,15 +48,12 @@
     "@types/compression": "^1.7.0",
     "@types/express": "^4.17.8",
     "@types/express-session": "^1.17.0",
-    "@types/graphql": "^14.5.0",
     "@types/graphql-depth-limit": "^1.1.2",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "^14.11.2",
     "@types/passport": "^1.0.4",
     "@types/uuid": "^8.3.0",
     "graphql-depth-limit": "^1.1.0",
-    "graphql-import": "^1.0.2",
-    "graphql-import-node": "0.0.4",
     "nodemon": "^2.0.4",
     "ts-node": "^9.0.0"
   }

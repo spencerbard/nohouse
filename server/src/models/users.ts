@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import Knex from 'knex';
-import knex from '../db';
-import { UsersRowRead, UsersRowWrite } from '../generated/database';
-import { User } from '../generated/graphql';
-import { TOKEN_SECRET } from '../secrets';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import Knex from "knex";
+import knex from "../db";
+import { UsersRowRead, UsersRowWrite } from "../generated/database";
+import { User } from "../generated/graphql";
+import { TOKEN_SECRET } from "../secrets";
 
 const SALT_ROUNDS = 10;
 
@@ -12,11 +12,12 @@ async function encodePassword(password: string): Promise<string> {
   return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export function decodeToken(token: string): User {
+export function decodeToken(token: string): User | null {
   try {
     return jwt.verify(token, TOKEN_SECRET) as User;
   } catch (err) {
-    throw new Error(err);
+    console.warn(err);
+    return null;
   }
 }
 
@@ -46,7 +47,7 @@ export async function create(userInput: UsersRowWrite): Promise<UsersRowRead> {
   return row;
 }
 
-export async function getByToken(token: string): Promise<User> {
+export async function getByToken(token: string): Promise<User | null> {
   return decodeToken(token);
 }
 
