@@ -125,12 +125,10 @@ const resolvers: IResolvers = {
       const { email, password } = userLoginInput;
       const existingUser = await UserModel.getByEmail(email);
       if (!existingUser) {
-        throw new UserInputError(`
-          User does not exist.
-        `);
+        throw new UserInputError("User does not exist.");
       }
       if (!(await UserModel.comparePassword(existingUser, password))) {
-        throw new UserInputError(`Sorry that password doesn't match.`);
+        throw new UserInputError("Password does not match.");
       }
       return {
         ...existingUser,
@@ -150,7 +148,7 @@ const resolvers: IResolvers = {
     ): Promise<CurrentUser> {
       const existingUser = await UserModel.getByEmail(userSignupInput.email);
       if (!!existingUser) {
-        throw new UserInputError(`User with email already exists.`);
+        throw new UserInputError("User with email already exists.");
       }
       const newUser = await UserModel.create(userSignupInput);
       return {

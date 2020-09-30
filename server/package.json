@@ -17,6 +17,7 @@
   "author": "Spencer Bard",
   "license": "ISC",
   "dependencies": {
+    "@ant-design/icons": "^4.2.2",
     "apollo-server": "^2.18.0",
     "apollo-server-express": "^2.18.0",
     "bcrypt": "^5.0.0",

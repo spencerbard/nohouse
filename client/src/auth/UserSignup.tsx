@@ -1,5 +1,5 @@
+import { useAuth } from ".";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { gql, useMutation } from "@apollo/client";
 import {
   Button,
   Input,
@@ -9,28 +9,14 @@ import {
   } from "antd";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { CurrentUser, UserSignupInput } from "../generated/graphql";
-
-const USER_SIGNUP_MUTATION = gql`
-  mutation UserSignupMutation($userSignupInput: UserSignupInput!) {
-    userSignup(userSignupInput: $userSignupInput) {
-      token
-    }
-  }
-`;
 
 export default function UserSignup() {
+  const { signup, state: authState, error } = useAuth();
   const history = useHistory();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userSignup, { data, loading, error }] = useMutation<
-    {
-      userSignup: CurrentUser;
-    },
-    { userSignupInput: UserSignupInput }
-  >(USER_SIGNUP_MUTATION, { errorPolicy: "all" });
 
   const isValid =
     name.length &&
@@ -38,16 +24,9 @@ export default function UserSignup() {
     password.length > 7 &&
     confirmPassword === password;
 
-  React.useEffect(() => {
-    if (data?.userSignup) {
-      localStorage.setItem("token", data?.userSignup.token);
-      history.push("/");
-    }
-  }, [data, history]);
-
   const handleSubmit = () => {
     if (isValid) {
-      userSignup({ variables: { userSignupInput: { name, email, password } } });
+      signup({ name, email, password });
     }
   };
 
@@ -101,20 +80,24 @@ export default function UserSignup() {
             }
           />
           {error && (
-            <Typography.Text type="danger">{error.toString()}</Typography.Text>
+            <Typography.Text type="danger">{error.message}</Typography.Text>
           )}
           <Row justify="end" align="middle">
             <Button
               data-cy="submit"
               disabled={!isValid}
               onClick={handleSubmit}
-              loading={loading}
+              loading={authState === "SigningUp"}
               size={"middle"}
               type={"primary"}
             >
               Submit
             </Button>
           </Row>
+          <div style={{ border: "1px solid #f0f0f0" }} />
+          <Typography.Link onClick={() => history.push("/login")}>
+            Already signed up? Click here to log in.
+          </Typography.Link>
         </Space>
       </div>
     </Row>

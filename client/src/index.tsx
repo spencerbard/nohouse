@@ -12,6 +12,7 @@ import {
   InMemoryCache,
   createHttpLink,
 } from "@apollo/client";
+
 const API_URL =
   process.env.NODE_ENV === "production"
     ? "https://nohouse-server.herokuapp.com/graphql"
@@ -23,7 +24,6 @@ const httpLink = createHttpLink({
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors) {
-    console.log(graphQLErrors);
     graphQLErrors.map(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`

@@ -1,5 +1,5 @@
+import { useAuth } from ".";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { gql, useMutation } from "@apollo/client";
 import {
   Button,
   Input,
@@ -9,49 +9,35 @@ import {
   } from "antd";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { CurrentUser, UserLoginInput } from "../generated/graphql";
-
-const LOGIN_MUTATION = gql`
-  mutation LoginMutation($userLoginInput: UserLoginInput!) {
-    userLogin(userLoginInput: $userLoginInput) {
-      uid
-      name
-      email
-      token
-    }
-  }
-`;
 
 export default function UserLogin() {
   const history = useHistory();
+  const { login, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userLogin, { data }] = useMutation<
-    {
-      userLogin: CurrentUser;
-    },
-    {
-      userLoginInput: UserLoginInput;
-    }
-  >(LOGIN_MUTATION);
-
   const isValid = email.length && password.length > 7;
 
-  const handleSubmit = () => {
-    userLogin({ variables: { userLoginInput: { email, password } } });
+  async function handleSubmit() {
+    if (isValid) {
+      await login({ email, password });
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
   };
 
-  React.useEffect(() => {
-    if (data?.userLogin?.token) {
-      localStorage.setItem("token", data.userLogin.token);
-      history.push("/");
-    }
-  }, [data, history]);
-
   return (
-    <Row justify="space-around" align="middle" style={{ height: "100%" }}>
+    <Row
+      onKeyPress={handleKeyPress}
+      justify="space-around"
+      align="middle"
+      style={{ height: "100%" }}
+    >
       <div>
-        <Typography.Title level={3}>Sign Up</Typography.Title>
+        <Typography.Title level={3}>Log In</Typography.Title>
         <Space direction="vertical">
           <Input
             placeholder="Email"
@@ -70,6 +56,9 @@ export default function UserLogin() {
               setPassword(event.target.value)
             }
           />
+          {error && (
+            <Typography.Text type="danger">{error.message}</Typography.Text>
+          )}
           <Row justify="end" align="middle">
             <Button
               disabled={!isValid}
@@ -81,6 +70,13 @@ export default function UserLogin() {
               Login
             </Button>
           </Row>
+          <div style={{ border: "1px solid #f0f0f0" }} />
+          <Typography.Link
+            style={{ textAlign: "center" }}
+            onClick={() => history.push("/signup")}
+          >
+            Need an account? Click here to sign up.
+          </Typography.Link>
         </Space>
       </div>
     </Row>

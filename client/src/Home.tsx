@@ -29,6 +29,6 @@ const GET_LINES = gql`
 `;
 
 export default function Home() {
-  const { data, error, loading } = useQuery<{ lines: Line[] }>(GET_LINES);
+  const { data, loading } = useQuery<{ lines: Line[] }>(GET_LINES);
   return <div>{!loading && data && <LinesList lines={data.lines} />}</div>;
 }
