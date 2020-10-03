@@ -19,7 +19,7 @@ export default function UserLogin() {
 
   async function handleSubmit() {
     if (isValid) {
-      await login({ email, password });
+      login({ email, password }).then(() => history.push("/"));
     }
   }
 

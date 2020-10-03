@@ -1,4 +1,5 @@
 import cors from "cors";
+import DataLoader from "dataloader";
 import express from "express";
 import { GraphQLScalarType, GraphQLSchema, Kind } from "graphql";
 import depthLimit from "graphql-depth-limit";
@@ -6,20 +7,31 @@ import { IResolvers, makeExecutableSchema } from "graphql-tools";
 import { createServer } from "http";
 import * as OddsModel from "../models/odds";
 import * as UserModel from "../models/users";
+import createLoaders from "./dataloaders";
+import {
+  LinesHistoryRowRead,
+  line_market_side,
+  UserLinesRowRead,
+} from "../generated/database";
+import {
+  CurrentUser,
+  Line,
+  LineMarketSide,
+  Sport,
+  User,
+  UserLine,
+  UserLineInput,
+  UserLoginInput,
+  UserLineAcceptInput,
+  UserSignupInput,
+} from "../generated/graphql";
 import {
   ApolloServer,
   gql,
   UserInputError,
   AuthenticationError,
+  ForbiddenError,
 } from "apollo-server-express";
-import {
-  CurrentUser,
-  User,
-  UserLoginInput,
-  UserSignupInput,
-  Line,
-  Sport,
-} from "../generated/graphql";
 
 const customFloat = new GraphQLScalarType({
   name: "CustomFloat",
@@ -40,14 +52,51 @@ const typeDefs = gql`
 
   type Query {
     lines: [Line]
-    odds(sport: String!): String
-    sports: [Sport]
+    openLines: [UserLine]
   }
 
   type Mutation {
     userSignup(userSignupInput: UserSignupInput!): CurrentUser
     userLogin(userLoginInput: UserLoginInput!): CurrentUser
     userLoginToken(token: String!): CurrentUser
+    userLineCreate(userLineInput: UserLineInput!): UserLine!
+    userLineAccept(userLineAcceptInput: UserLineAcceptInput!): UserLine!
+  }
+
+  input UserLineAcceptInput {
+    user_line_uid: String!
+    acceptor_side: LineMarketSide!
+  }
+
+  enum LineMarketSide {
+    spread_home
+    spread_away
+    total_over
+    total_under
+    h2h_home
+    h2h_away
+  }
+
+  type UserLine {
+    uid: String!
+    line_uid: String!
+    amount: Int!
+    creator_uid: String!
+    created_at: String!
+    creator_side: LineMarketSide!
+    acceptor_uid: String
+    accepted_at: String
+    acceptor_side: LineMarketSide
+    deleted_at: String
+    line: Line!
+    creator: User!
+    acceptor: User
+  }
+
+  input UserLineInput {
+    line_uid: String!
+    amount: Int!
+    creator_side: LineMarketSide!
   }
 
   type Line {
@@ -69,6 +118,7 @@ const typeDefs = gql`
     total_under_vig: CustomFloat
     load_uid: String!
     created_at: String!
+    openLines: [UserLine]
   }
 
   type Sport {
@@ -109,12 +159,32 @@ const typeDefs = gql`
 const resolvers: IResolvers = {
   CustomFloat: customFloat,
   Query: {
-    odds: () => "gotem",
-    sports: async (): Promise<Sport[]> => {
-      return await OddsModel.getSports();
-    },
     lines: async (): Promise<Line[]> => {
       return await OddsModel.getLines();
+    },
+    openLines: async (_parent, _q, { user, loaders }) => {
+      if (!user) {
+        throw new ForbiddenError("User must be logged in to view this.");
+      }
+      return await OddsModel.listOpenUserLines();
+    },
+  },
+  UserLine: {
+    line: async (userLine: UserLinesRowRead, _q, { loaders }) => {
+      return loaders.lines.load(userLine.line_uid);
+    },
+    acceptor: async (userLine: UserLinesRowRead, _q, { loaders }) => {
+      return userLine.acceptor_uid
+        ? loaders.users.load(userLine.acceptor_uid)
+        : null;
+    },
+    creator: async (userLine: UserLinesRowRead, _q, { loaders }) => {
+      return loaders.users.load(userLine.creator_uid);
+    },
+  },
+  Line: {
+    openLines: async (line: LinesHistoryRowRead) => {
+      return await OddsModel.listOpenUserLines(line.uid);
     },
   },
   Mutation: {
@@ -158,6 +228,50 @@ const resolvers: IResolvers = {
         token: UserModel.encodeToken(newUser),
       };
     },
+    userLineCreate: async function (
+      _,
+      { userLineInput }: { userLineInput: UserLineInput },
+      { user, loaders }
+    ): Promise<UserLine> {
+      if (!user) {
+        throw new ForbiddenError("User must be logged in to create line.");
+      }
+      const userLine: UserLinesRowRead = await OddsModel.createUserLine({
+        ...userLineInput,
+        creator_side: (userLineInput.creator_side as any) as line_market_side,
+        creator_uid: user.uid,
+      });
+      return {
+        ...userLine,
+        creator_side: (userLine.creator_side as any) as LineMarketSide,
+        acceptor_side: (userLine.acceptor_side as any) as LineMarketSide,
+        creator: loaders.users.load(user.uid),
+        acceptor: null,
+        line: loaders.lines.load(userLine.line_uid),
+      };
+    },
+    userLineAccept: async function (
+      _,
+      { userLineAcceptInput }: { userLineAcceptInput: UserLineAcceptInput },
+      { user, loaders }
+    ) {
+      if (!user) {
+        throw new ForbiddenError("User must be logged in to accept line.");
+      }
+      const userLine: UserLinesRowRead = await OddsModel.acceptUserLine({
+        acceptorSide: (userLineAcceptInput.acceptor_side as any) as line_market_side,
+        acceptorUid: user.uid,
+        userLineUid: userLineAcceptInput.user_line_uid,
+      });
+      return {
+        ...userLine,
+        creator_side: (userLine.creator_side as any) as LineMarketSide,
+        acceptor_side: (userLine.acceptor_side as any) as LineMarketSide,
+        creator: loaders.users.load(userLine.creator_uid),
+        acceptor: loaders.users.load(user.uid),
+        line: loaders.lines.load(userLine.line_uid),
+      };
+    },
   },
 };
 
@@ -180,7 +294,11 @@ const server = new ApolloServer({
       : null;
 
     // add the user to the context
-    return { user, tzoffset: req.headers.tzoffset };
+    return {
+      user,
+      tzoffset: req.headers.tzoffset,
+      loaders: createLoaders(),
+    };
   },
   introspection: true,
 });

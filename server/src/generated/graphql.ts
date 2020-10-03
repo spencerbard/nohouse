@@ -15,13 +15,7 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   lines?: Maybe<Array<Maybe<Line>>>;
-  odds?: Maybe<Scalars['String']>;
-  sports?: Maybe<Array<Maybe<Sport>>>;
-};
-
-
-export type QueryOddsArgs = {
-  sport: Scalars['String'];
+  openLines?: Maybe<Array<Maybe<UserLine>>>;
 };
 
 export type Mutation = {
@@ -29,6 +23,8 @@ export type Mutation = {
   userSignup?: Maybe<CurrentUser>;
   userLogin?: Maybe<CurrentUser>;
   userLoginToken?: Maybe<CurrentUser>;
+  userLineCreate: UserLine;
+  userLineAccept: UserLine;
 };
 
 
@@ -44,6 +40,53 @@ export type MutationUserLoginArgs = {
 
 export type MutationUserLoginTokenArgs = {
   token: Scalars['String'];
+};
+
+
+export type MutationUserLineCreateArgs = {
+  userLineInput: UserLineInput;
+};
+
+
+export type MutationUserLineAcceptArgs = {
+  userLineAcceptInput: UserLineAcceptInput;
+};
+
+export type UserLineAcceptInput = {
+  user_line_uid: Scalars['String'];
+  acceptor_side: LineMarketSide;
+};
+
+export enum LineMarketSide {
+  SpreadHome = 'spread_home',
+  SpreadAway = 'spread_away',
+  TotalOver = 'total_over',
+  TotalUnder = 'total_under',
+  H2hHome = 'h2h_home',
+  H2hAway = 'h2h_away'
+}
+
+export type UserLine = {
+  __typename?: 'UserLine';
+  uid: Scalars['String'];
+  line_uid: Scalars['String'];
+  amount: Scalars['Int'];
+  creator_uid: Scalars['String'];
+  created_at: Scalars['String'];
+  creator_side: LineMarketSide;
+  acceptor_uid?: Maybe<Scalars['String']>;
+  accepted_at?: Maybe<Scalars['String']>;
+  acceptor_side?: Maybe<LineMarketSide>;
+  deleted_at?: Maybe<Scalars['String']>;
+  line: Line;
+  creator: User;
+  acceptor?: Maybe<User>;
+};
+
+export type UserLineInput = {
+  line_uid: Scalars['String'];
+  amount: Scalars['Int'];
+  creator_side: LineMarketSide;
 };
 
 export type Line = {
@@ -66,6 +109,7 @@ export type Line = {
   total_under_vig?: Maybe<Scalars['CustomFloat']>;
   load_uid: Scalars['String'];
   created_at: Scalars['String'];
+  openLines?: Maybe<Array<Maybe<UserLine>>>;
 };
 
 export type Sport = {

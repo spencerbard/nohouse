@@ -34,3 +34,8 @@ tail-client:
 
 tail-server:
 	heroku logs -a nohouse-server --tail
+
+deploy-all:
+	$(MAKE) deploy-client &
+	$(MAKE) deploy-server &
+	jobs

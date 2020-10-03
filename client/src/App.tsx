@@ -7,7 +7,7 @@ import PrivateRoute from "./auth/PrivateRoute";
 import UserLogin from "./auth/UserLogin";
 import UserSignup from "./auth/UserSignup";
 import Header from "./Header";
-import Home from "./Home";
+import Lines from "./lines";
 
 const Content = styled.div(() => ({
   width: "100%",
@@ -24,7 +24,7 @@ function App() {
           <Switch>
             <Route exact path="/signup" component={UserSignup} />
             <Route exact path="/login" component={UserLogin} />
-            <PrivateRoute exact={false} path="/" component={Home} />
+            <PrivateRoute exact={false} path="/" component={Lines} />
           </Switch>
         </Content>
       </AuthProvider>

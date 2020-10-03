@@ -52,9 +52,9 @@ type TAuthContext = {
   user: CurrentUser | null;
   isAuthenticated: boolean;
   state: AuthState;
-  login(input: UserLoginInput): void;
+  login(input: UserLoginInput): Promise<void>;
   logout(): void;
-  signup(input: UserSignupInput): void;
+  signup(input: UserSignupInput): Promise<void>;
 };
 
 const AuthContext = React.createContext<TAuthContext>({
@@ -62,9 +62,9 @@ const AuthContext = React.createContext<TAuthContext>({
   user: null,
   isAuthenticated: false,
   state: AuthState.Unauthenticated,
-  login: (_input: UserLoginInput) => {},
+  login: (_input: UserLoginInput) => Promise.resolve(),
   logout: () => {},
-  signup: (_input: UserSignupInput) => {},
+  signup: (_input: UserSignupInput) => Promise.resolve(),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -100,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user);
         setState(AuthState.Authenticated);
         setError(null);
-        history.push("/");
       }
     },
     [setUser, setState, setError, history]
@@ -122,13 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (state === AuthState.TokenLoggingIn && token) {
-      userLoginToken({ variables: { token } })
-        .then((resp) => {
-          handleLogin(resp?.data?.userLoginToken);
-        })
-        .catch((err) => {
-          handleFailure(err.message);
-        });
+      userLoginToken({ variables: { token } }).then((resp) => {
+        if (resp.errors) {
+          handleFailure(resp.errors[0]);
+        }
+        handleLogin(resp?.data?.userLoginToken);
+      });
     } else if (state === AuthState.TokenLoggingIn) {
       setState(AuthState.Unauthenticated);
     }

@@ -26,7 +26,7 @@ export default function UserSignup() {
 
   const handleSubmit = () => {
     if (isValid) {
-      signup({ name, email, password });
+      signup({ name, email, password }).then(() => history.push("/"));
     }
   };
 

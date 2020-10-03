@@ -46,6 +46,18 @@ export interface SportsRowRead {
 "has_outrights": boolean 
 "created_at": any 
 }
+export interface UserLinesRowRead {
+"uid": string 
+"line_uid": string 
+"amount": number 
+"creator_uid": string 
+"created_at": any 
+"creator_side": line_market_side 
+"acceptor_uid": string | null 
+"accepted_at": any | null 
+"acceptor_side": line_market_side | null 
+"deleted_at": any | null 
+}
 export interface UsersRowRead {
 "uid": string 
 "name": string 
@@ -99,6 +111,18 @@ export interface SportsRowWrite {
 "has_outrights": boolean 
 "created_at"?: any 
 }
+export interface UserLinesRowWrite {
+"uid"?: string 
+"line_uid": string 
+"amount": number 
+"creator_uid": string 
+"created_at"?: any 
+"creator_side": line_market_side 
+"acceptor_uid"?: string | null
+"accepted_at"?: any | null
+"acceptor_side"?: line_market_side | null
+"deleted_at"?: any | null
+}
 export interface UsersRowWrite {
 "uid"?: string 
 "name": string 
@@ -108,4 +132,11 @@ export interface UsersRowWrite {
 "updated_at"?: any 
 "deleted_at"?: any | null
 }
-
+export enum line_market_side {
+spread_home = "spread_home",
+spread_away = "spread_away",
+total_over = "total_over",
+total_under = "total_under",
+h2h_home = "h2h_home",
+h2h_away = "h2h_away",
+}

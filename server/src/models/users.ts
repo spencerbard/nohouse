@@ -54,3 +54,7 @@ export async function getByToken(token: string): Promise<User | null> {
 export async function comparePassword(user: UsersRowRead, password: string) {
   return await bcrypt.compare(password, user.password);
 }
+
+export async function listByUids(uids: string[]): Promise<UsersRowRead[]> {
+  return await select().whereIn("uid", uids);
+}
