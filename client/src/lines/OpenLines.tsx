@@ -17,10 +17,10 @@ const OpenLinesContainer = styled.div(() => ({
   width: "100%",
 }));
 
-const OpenLinesHeader = styled.div(() => ({
+const OpenLinesHeader = styled.div(({ onClick }) => ({
   width: "100%",
   height: "25px",
-  cursor: "pointer",
+  cursor: onClick ? "pointer" : "default",
   display: "flex",
   justifyContent: "flex-end",
   alignItems: "center",
@@ -137,7 +137,7 @@ export default function OpenLines({ line }: OpenLinesProps) {
 
   return (
     <OpenLinesContainer>
-      <OpenLinesHeader onClick={toggleExpanded}>
+      <OpenLinesHeader onClick={openLines.length ? toggleExpanded : undefined}>
         {!openLines.length ? (
           <Typography.Text>No Open Lines</Typography.Text>
         ) : (
